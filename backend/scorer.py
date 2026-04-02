@@ -1,8 +1,12 @@
 import math
 import numpy as np
+import logging
 from backend.utils import normalize_01, extract_highlights
 from backend.analyzer import analyze_reviews
 from backend.fake_review_detector import detect_fake_reviews
+
+logger = logging.getLogger("tripxplo-scorer")
+logger.setLevel(logging.INFO)
 
 def score_and_rank_hotels(hotels, user_type):
     """
@@ -105,12 +109,24 @@ def score_and_rank_hotels(hotels, user_type):
             user_type
         )
         
-        # Generate generic reason based on persona
-        reason = f"Ranked high for {user_type} due to overall quality and metrics."
-        if user_type == "honeymoon": reason = "Top choice for a romantic stay based on review sentiment."
-        elif user_type == "family": reason = "Excellent family-friendly environment and amenities."
-        elif user_type == "budget": reason = "Outstanding value for money based on pricing keywords."
-        else: reason = "Solid all-rounder based on AI analysis."
+        # Generate more descriptive reasons based on persona and metrics
+        if user_type == "honeymoon":
+            if data["sentiment"] > 0.5:
+                reason = "Highly recommended for couples due to exceptional romantic sentiment and glowing atmosphere."
+            else:
+                reason = "Popular choice for couples with high overall quality scores."
+        elif user_type == "family":
+            if data["kw_counts_dict"].get("family", 0) > 5:
+                reason = "Top-tier family destination with numerous mentions of excellent child-friendly facilities."
+            else:
+                reason = "Strongly recommended for families based on amenities and safety metrics."
+        elif user_type == "budget":
+            if data["rating"] > 4.0:
+                reason = "Rare find: High-quality service at a budget-friendly price point."
+            else:
+                reason = "Optimal value for money based on review analysis and local pricing."
+        else:
+            reason = "Solid all-rounder providing a balanced mix of service, location, and verified reviews."
         
         results.append({
             "hotel_name": data["hotel"]["hotel_name"],
