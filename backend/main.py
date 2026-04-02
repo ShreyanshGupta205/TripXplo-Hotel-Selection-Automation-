@@ -9,7 +9,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger("tripxplo-api")
 
-app = FastAPI(title="TripXplo AI Hotel Selection Engine")
+from pydantic import BaseModel, Field
+
+app = FastAPI(
+    title="TripXplo AI Hotel Selection Engine",
+    description="Enterprise-grade AI engine for automated hotel ranking, sentiment analysis, and anti-bot verification.",
+    version="1.0.0",
+    contact={
+        "name": "TripXplo Engineering",
+        "url": "https://github.com/ShreyanshGupta205/TripXplo-Hotel-Selection-Automation-",
+    }
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,8 +32,17 @@ app.add_middleware(
 from backend.database import get_hotels_data
 
 class RecommendRequest(BaseModel):
-    location: str
-    user_type: str
+    location: str = Field(..., description="Target search location", example="Paris, France")
+    user_type: str = Field(..., description="User persona for weighted ranking", example="honeymoon")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "location": "Paris, France",
+                "user_type": "honeymoon"
+            }
+        }
+    }
 
 @app.get("/api/hotels")
 def get_hotels():
